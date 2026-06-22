@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.core.logging import setup_logging
-from app.api.endpoints import projects, manuscripts, matches, auth, health
+from app.api.endpoints import projects, manuscripts, matches, auth, health, tasks
 
 # Configure logging before anything else
 setup_logging(settings.LOG_LEVEL)
@@ -26,6 +26,7 @@ app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(projects.router, prefix="/api/projects", tags=["projects"])
 app.include_router(manuscripts.router, prefix="/api/manuscripts", tags=["manuscripts"])
 app.include_router(matches.router, prefix="/api/matches", tags=["matches"])
+app.include_router(tasks.router, prefix="/api/tasks", tags=["tasks"])
 
 
 @app.get("/")

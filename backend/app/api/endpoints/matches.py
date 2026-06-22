@@ -8,10 +8,12 @@ from app.db.database import get_db
 from app.models.manuscript import Manuscript
 from app.models.project import Project
 from app.models.user import User
-from app.schemas import JournalMatchResponse, MatchScore
+from app.schemas import JournalMatchResponse, MatchScore, RiskAssessmentResponse
 from app.services.openalex_service import OpenAlexService
 from app.services.scoring_service import ScoringService
 from app.services.llm_service import LLMService
+from app.services.doaj_service import DOAJService
+from app.services.risk_service import RiskAssessmentService
 from app.core.security import get_current_user
 
 logger = logging.getLogger(__name__)
@@ -20,6 +22,8 @@ router = APIRouter()
 openalex_service = OpenAlexService()
 scoring_service = ScoringService()
 llm_service = LLMService()
+doaj_service = DOAJService()
+risk_service = RiskAssessmentService()
 
 
 @router.get("/{manuscript_id}", response_model=list[JournalMatchResponse])
@@ -68,6 +72,39 @@ async def get_matches(
 
     results.sort(key=lambda x: x.scores.final_score, reverse=True)
 
+    # Run risk assessment for each result
+    for res in results[:10]:  # Assess top 10
+        try:
+            # DOAJ verification
+            doaj_result = {"in_doaj": False}
+            if res.issn_print:
+                doaj_result = await doaj_service.verify_journal(res.issn_print)
+
+            # Build risk assessment input from available data
+            risk_input = {
+                "in_doaj": doaj_result.get("in_doaj", False),
+                "indexed_scopus": False,  # Not available from OpenAlex dict
+                "indexed_wos": False,
+                "issn": res.issn_print,
+                "publisher": res.publisher,
+            }
+            risk_result = risk_service.assess_journal(risk_input)
+            res.risk_assessment = RiskAssessmentResponse(
+                risk_score=risk_result["risk_score"],
+                risk_level=risk_result["risk_level"],
+                signals=risk_result["signals"],
+            )
+        except Exception as e:
+            logger.error(
+                "Risk assessment failed for journal %s: %s",
+                res.openalex_id,
+                e,
+                exc_info=True,
+            )
+            # Graceful degradation — risk assessment is optional
+            res.risk_assessment = None
+
+    # AI analysis for top 3
     for res in results[:3]:
         journal_data = {
             "name": res.name,

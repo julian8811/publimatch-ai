@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import List, Optional
 from uuid import UUID
 from datetime import datetime
@@ -19,8 +19,7 @@ class ProjectResponse(ProjectBase):
     id: UUID
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # --- Manuscript ---
@@ -39,8 +38,7 @@ class ManuscriptResponse(ManuscriptBase):
     article_type: Optional[str] = None
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # --- Auth ---
@@ -59,8 +57,7 @@ class UserResponse(BaseModel):
     institution: Optional[str] = None
     role: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class LoginRequest(BaseModel):
@@ -89,6 +86,7 @@ class MatchScore(BaseModel):
     indexing_score: float = 0
     language_score: float = 0
     cost_score: float = 0
+    review_speed_score: float = 0
 
 
 class AIAnalysis(BaseModel):
@@ -96,6 +94,16 @@ class AIAnalysis(BaseModel):
     predatory_risk: str
     submission_strategy: str
 
+
+# --- Risk Assessment ---
+
+class RiskAssessmentResponse(BaseModel):
+    risk_score: int
+    risk_level: str
+    signals: List[str]
+
+
+# --- Journal Match ---
 
 class JournalMatchResponse(BaseModel):
     openalex_id: str
@@ -107,3 +115,13 @@ class JournalMatchResponse(BaseModel):
     homepage_url: str
     scores: MatchScore
     ai_analysis: Optional[AIAnalysis] = None
+    risk_assessment: Optional[RiskAssessmentResponse] = None
+
+
+# --- Tasks ---
+
+class TaskStatusResponse(BaseModel):
+    task_id: str
+    status: str
+    result: Optional[dict] = None
+    error: Optional[str] = None
