@@ -64,9 +64,12 @@ MOCK_JOURNALS = [
 # Scores returned by the mocked ScoringService
 MOCK_SCORES = {
     "final_score": 85.5,
-    "relevance_score": 35.0,
+    "semantic_score": 35.0,
     "impact_score": 25.0,
     "oa_score": 20.0,
+    "indexing_score": 10.0,
+    "language_score": 5.0,
+    "cost_score": 3.0,
 }
 
 
@@ -161,7 +164,7 @@ class TestMatches:
         async def mock_fetch(*args, **kwargs):
             return MOCK_JOURNALS
 
-        def mock_score(keywords, journal_data):
+        def mock_score(keywords, journal_data, **kwargs):
             return dict(MOCK_SCORES)
 
         async def mock_analysis(*args, **kwargs):

@@ -50,7 +50,9 @@ async def get_matches(
 
     results = []
     for j in journals:
-        scores = scoring_service.calculate_journal_match_score(manuscript.keywords, j)
+        scores = scoring_service.calculate_journal_match_score(
+            manuscript.keywords, j, manuscript=manuscript
+        )
         results.append(
             JournalMatchResponse(
                 openalex_id=j["openalex_id"],

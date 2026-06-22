@@ -83,9 +83,12 @@ class AuthResponse(BaseModel):
 
 class MatchScore(BaseModel):
     final_score: float
-    relevance_score: float
-    impact_score: float
-    oa_score: float
+    semantic_score: float = 0
+    impact_score: float = 0
+    oa_score: float = 0
+    indexing_score: float = 0
+    language_score: float = 0
+    cost_score: float = 0
 
 
 class AIAnalysis(BaseModel):
