@@ -7,7 +7,7 @@ Computes a 0–100 composite score from 6 weighted components:
     Open Access       (20%) — binary boost
     Indexation        (10%) — Scopus / WoS / DOAJ / Latindex coverage
     Language Match    (10%) — manuscript language vs journal languages
-    APC Cost          ( 5%) — inverse APC penalty
+    APC               ( 5%) — inverse APC penalty
 
 Each sub-score is normalized to 0–1 before weighting.
 Final score = SUM(component × weight) × 100, capped at 100.
@@ -31,12 +31,12 @@ class ScoringService:
         "semantic": 0.35,
         "impact": 0.20,
         "oa": 0.20,
-        "indexing": 0.10,
+        "indexation": 0.10,
         "language": 0.10,
-        "cost": 0.05,
+        "apc": 0.05,
     }
 
-    # Maximum APC in USD above which the cost score is 0
+    # Maximum APC in USD above which the apc score is 0
     APC_MAX_USD = 3000.0
 
     # Number of indexed databases considered
@@ -67,18 +67,18 @@ class ScoringService:
         semantic = self._semantic_score(manuscript_keywords, journal_data, manuscript)
         impact = self._impact_score(journal_data)
         oa = self._oa_score(journal_data)
-        indexing = self._indexing_score(journal_data)
+        indexation = self._indexation_score(journal_data)
         language = self._language_score(journal_data)
-        cost = self._cost_score(journal_data)
+        apc = self._apc_score(journal_data)
 
         # Weighted sum → 0–100
         weighted = (
             semantic * self.JMS_WEIGHTS["semantic"]
             + impact * self.JMS_WEIGHTS["impact"]
             + oa * self.JMS_WEIGHTS["oa"]
-            + indexing * self.JMS_WEIGHTS["indexing"]
+            + indexation * self.JMS_WEIGHTS["indexation"]
             + language * self.JMS_WEIGHTS["language"]
-            + cost * self.JMS_WEIGHTS["cost"]
+            + apc * self.JMS_WEIGHTS["apc"]
         )
         final_score = min(round(weighted * 100, 1), 100.0)
 
@@ -87,9 +87,9 @@ class ScoringService:
             "semantic_score": round(semantic * 100, 1),
             "impact_score": round(impact * 100, 1),
             "oa_score": round(oa * 100, 1),
-            "indexing_score": round(indexing * 100, 1),
+            "indexation_score": round(indexation * 100, 1),
             "language_score": round(language * 100, 1),
-            "cost_score": round(cost * 100, 1),
+            "apc_score": round(apc * 100, 1),
         }
 
     # ------------------------------------------------------------------
@@ -152,7 +152,7 @@ class ScoringService:
         """
         return 1.0 if journal_data.get("open_access", False) else 0.25
 
-    def _indexing_score(self, journal_data: dict) -> float:
+    def _indexation_score(self, journal_data: dict) -> float:
         """Indexation coverage across Scopus, WoS, DOAJ, Latindex.
 
         Counts True-ish values for indexed_* fields and divides by 4.
@@ -186,7 +186,7 @@ class ScoringService:
         # Single language string
         return 1.0 if manuscript_lang == str(journal_languages) else 0.0
 
-    def _cost_score(self, journal_data: dict) -> float:
+    def _apc_score(self, journal_data: dict) -> float:
         """Inverse APC cost penalty.
 
         $0 APC → 1.0 (max score)

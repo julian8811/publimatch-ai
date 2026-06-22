@@ -87,9 +87,9 @@ def _save_match_result(
             scope_score=scores.get("semantic_score", 0),
             recent_articles_score=0,
             methodology_score=scores.get("impact_score", 0),
-            indexing_score=scores.get("indexing_score", 0),
+            indexing_score=scores.get("indexation_score", 0),
             language_score=scores.get("language_score", 0),
-            cost_score=scores.get("cost_score", 0),
+            cost_score=scores.get("apc_score", 0),
             final_score=scores.get("final_score", 0),
         )
         db.add(result)

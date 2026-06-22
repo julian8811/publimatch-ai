@@ -67,9 +67,9 @@ MOCK_SCORES = {
     "semantic_score": 35.0,
     "impact_score": 25.0,
     "oa_score": 20.0,
-    "indexing_score": 10.0,
+    "indexation_score": 10.0,
     "language_score": 5.0,
-    "cost_score": 3.0,
+    "apc_score": 3.0,
 }
 
 

@@ -83,9 +83,9 @@ class MatchScore(BaseModel):
     semantic_score: float = 0
     impact_score: float = 0
     oa_score: float = 0
-    indexing_score: float = 0
+    indexation_score: float = 0
     language_score: float = 0
-    cost_score: float = 0
+    apc_score: float = 0
     review_speed_score: float = 0
 
 

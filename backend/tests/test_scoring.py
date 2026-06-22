@@ -113,22 +113,22 @@ class TestScoringService:
         )
         assert result["semantic_score"] == 0.0
 
-    def test_cost_score_zero_apc(self):
-        """Zero APC should give full cost_score."""
-        result = self.service._cost_score({"apc_usd": 0})
+    def test_apc_score_zero_apc(self):
+        """Zero APC should give full apc_score."""
+        result = self.service._apc_score({"apc_usd": 0})
         assert result == 1.0
 
-    def test_cost_score_high_apc(self):
-        """Very high APC should give zero cost_score."""
-        result = self.service._cost_score({"apc_usd": 5000})
+    def test_apc_score_high_apc(self):
+        """Very high APC should give zero apc_score."""
+        result = self.service._apc_score({"apc_usd": 5000})
         assert result == 0.0
 
-    def test_cost_score_mid_apc(self):
+    def test_apc_score_mid_apc(self):
         """APC at $1500 (half of max) should give 0.5 raw score."""
-        result = self.service._cost_score({"apc_usd": 1500})
+        result = self.service._apc_score({"apc_usd": 1500})
         assert result == pytest.approx(0.5, abs=0.01)
 
-    def test_indexing_score_all_true(self):
+    def test_indexation_score_all_true(self):
         """All 4 indexed fields true = 1.0 raw."""
         journal = {
             "indexed_scopus": True,
@@ -136,9 +136,9 @@ class TestScoringService:
             "indexed_doaj": True,
             "indexed_latindex": True,
         }
-        assert self.service._indexing_score(journal) == 1.0
+        assert self.service._indexation_score(journal) == 1.0
 
-    def test_indexing_score_none_true(self):
+    def test_indexation_score_none_true(self):
         """No indexed fields = 0.0 raw."""
         journal = {
             "indexed_scopus": False,
@@ -146,12 +146,12 @@ class TestScoringService:
             "indexed_doaj": False,
             "indexed_latindex": False,
         }
-        assert self.service._indexing_score(journal) == 0.0
+        assert self.service._indexation_score(journal) == 0.0
 
-    def test_indexing_score_missing_keys(self):
+    def test_indexation_score_missing_keys(self):
         """Missing indexed_* keys should be treated as False."""
         journal = {}
-        assert self.service._indexing_score(journal) == 0.0
+        assert self.service._indexation_score(journal) == 0.0
 
     # ------------------------------------------------------------------
     # Score component structure
@@ -169,9 +169,9 @@ class TestScoringService:
         assert "semantic_score" in result
         assert "impact_score" in result
         assert "oa_score" in result
-        assert "indexing_score" in result
+        assert "indexation_score" in result
         assert "language_score" in result
-        assert "cost_score" in result
+        assert "apc_score" in result
         assert isinstance(result["final_score"], float)
 
     def test_old_keys_not_present(self):
