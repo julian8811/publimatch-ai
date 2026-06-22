@@ -3,8 +3,10 @@
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import JournalCard from "@/components/JournalCard";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Loader2, ArrowLeft, AlertCircle } from "lucide-react";
 import Link from "next/link";
+import { config } from "@/lib/config";
+import { authHeaders, clearToken } from "@/lib/auth";
 
 function DashboardContent() {
   const searchParams = useSearchParams();
@@ -13,6 +15,7 @@ function DashboardContent() {
   const [manuscript, setManuscript] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingStep, setLoadingStep] = useState(0);
+  const [error, setError] = useState<string | null>(null);
 
   // Animated loading messages
   useEffect(() => {
@@ -27,22 +30,46 @@ function DashboardContent() {
     if (!id) return;
     
     const fetchData = async () => {
+      setError(null);
+      const headers = authHeaders();
+      
       try {
         // Fetch manuscript details
-        const manuRes = await fetch(`http://127.0.0.1:8003/api/manuscripts/${id}`);
+        const manuRes = await fetch(`${config.apiUrl}/manuscripts/${id}`, { headers });
+        if (manuRes.status === 401) {
+          clearToken();
+          setError("Your session has expired. Please log in again.");
+          setLoading(false);
+          return;
+        }
         if (manuRes.ok) {
           const manuData = await manuRes.json();
           setManuscript(manuData);
         }
 
         // Fetch matches
-        const matchesRes = await fetch(`http://127.0.0.1:8003/api/matches/${id}`);
+        const matchesRes = await fetch(`${config.apiUrl}/matches/${id}`, { headers });
+        if (matchesRes.status === 401) {
+          clearToken();
+          setError("Your session has expired. Please log in again.");
+          setLoading(false);
+          return;
+        }
         if (matchesRes.ok) {
           const matchesData = await matchesRes.json();
           setMatches(matchesData);
         }
+
+        if (!manuRes.ok && !matchesRes.ok) {
+          setError(`Failed to load data (${manuRes.status} / ${matchesRes.status})`);
+        }
       } catch (e) {
-        console.error(e);
+        if (e instanceof TypeError && e.message === "Failed to fetch") {
+          setError("Network error: Unable to reach the server. Make sure the backend is running.");
+        } else {
+          setError("An unexpected error occurred. Please try again.");
+        }
+        console.error("Dashboard fetch error:", e);
       } finally {
         setLoading(false);
       }
@@ -57,6 +84,26 @@ function DashboardContent() {
     "Running vector similarity search on OpenAlex...",
     "Performing double-pass AI journal compatibility analysis..."
   ];
+
+  if (error) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center py-24 relative overflow-hidden">
+        <div className="z-10 text-center max-w-md mx-auto px-6">
+          <AlertCircle className="w-16 h-16 text-rose-500 mx-auto mb-6" />
+          <h2 className="text-2xl font-bold mb-3 bg-clip-text text-transparent bg-gradient-to-r from-rose-400 to-rose-200">
+            Something went wrong
+          </h2>
+          <p className="text-zinc-400 mb-8">{error}</p>
+          <Link
+            href="/"
+            className="inline-flex items-center px-6 py-3 bg-violet-600 hover:bg-violet-500 text-white rounded-full font-semibold transition-all"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" /> Back to Upload
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

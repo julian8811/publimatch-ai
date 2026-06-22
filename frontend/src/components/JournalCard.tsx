@@ -7,9 +7,17 @@ const SCORE_LABELS: Record<string, { label: string; color: string }> = {
   semantic_score: { label: "Semantic", color: "bg-violet-500" },
   impact_score: { label: "Impact", color: "bg-blue-500" },
   oa_score: { label: "Open Access", color: "bg-emerald-500" },
-  indexing_score: { label: "Indexing", color: "bg-cyan-500" },
+  indexation_score: { label: "Indexation", color: "bg-cyan-500" },
   language_score: { label: "Language", color: "bg-amber-500" },
-  cost_score: { label: "APC Cost", color: "bg-rose-500" },
+  apc_score: { label: "APC Cost", color: "bg-rose-500" },
+  review_speed_score: { label: "Review Speed", color: "bg-teal-500" },
+};
+
+const RISK_COLORS: Record<string, { badge: string; dot: string; label: string }> = {
+  low: { badge: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30", dot: "bg-emerald-400", label: "Low Risk" },
+  medium: { badge: "bg-amber-500/20 text-amber-300 border-amber-500/30", dot: "bg-amber-400", label: "Medium Risk" },
+  moderate: { badge: "bg-amber-500/20 text-amber-300 border-amber-500/30", dot: "bg-amber-400", label: "Moderate Risk" },
+  high: { badge: "bg-rose-500/20 text-rose-300 border-rose-500/30", dot: "bg-rose-400", label: "High Risk" },
 };
 
 function ScoreBar({ label, score, color }: { label: string; score: number; color: string }) {
@@ -79,6 +87,29 @@ export default function JournalCard({ journal }: { journal: any }) {
           );
         })}
       </div>
+
+      {/* Risk Assessment Badge */}
+      {journal.risk_assessment && (
+        <div className="mb-4 relative z-10">
+          <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold ${
+            RISK_COLORS[journal.risk_assessment.risk_level]?.badge || RISK_COLORS.low.badge
+          }`}>
+            <span className={`w-2 h-2 rounded-full ${
+              RISK_COLORS[journal.risk_assessment.risk_level]?.dot || RISK_COLORS.low.dot
+            }`} />
+            <span>{RISK_COLORS[journal.risk_assessment.risk_level]?.label || "Unknown"} · Score {journal.risk_assessment.risk_score}</span>
+          </div>
+          {journal.risk_assessment.signals && journal.risk_assessment.signals.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-2">
+              {journal.risk_assessment.signals.map((signal: string) => (
+                <span key={signal} className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 text-zinc-400 border border-white/5">
+                  {signal.replace(/_/g, " ")}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="space-y-5 pt-5 border-t border-white/10 mt-auto relative z-10">
         <div className="flex items-center justify-between text-sm bg-black/20 p-3 rounded-xl border border-white/5">

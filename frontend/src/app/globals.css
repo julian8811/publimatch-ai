@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+:root {
+  --background: 0 0% 5%;
+  --foreground: 210 40% 98%;
+  --primary: 262 83% 58%; /* Electric Violet */
+  --primary-foreground: 210 40% 98%;
+  --border: 240 3.7% 15.9%;
+  --card: 240 10% 8%;
+  --card-foreground: 210 40% 98%;
+  --ring: 262 83% 58%;
+}
+
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  background-image: 
+    radial-gradient(circle at 15% 50%, rgba(139, 92, 246, 0.15), transparent 25%),
+    radial-gradient(circle at 85% 30%, rgba(56, 189, 248, 0.15), transparent 25%);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+.glass {
+  background: rgba(20, 20, 22, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
