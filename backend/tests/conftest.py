@@ -1,8 +1,19 @@
-"""Test configuration."""
+"""Test configuration.
+
+NOTE: pysqlite3-binary is used to replace the system sqlite3 module
+which has an incompatible library linkage on this machine.
+"""
 
 import os
-import tempfile
-from typing import Generator
+import sys
+
+# Replace sqlite3 with pysqlite3 BEFORE any other imports (including stdlib).
+import pysqlite3  # noqa: E402
+
+sys.modules["sqlite3"] = pysqlite3
+
+import tempfile  # noqa: E402
+from typing import Generator  # noqa: E402
 
 # Set test environment variables BEFORE any app imports.
 # If we don't do this, settings like JWT_SECRET_KEY will be empty.
@@ -11,19 +22,20 @@ os.environ.setdefault("JWT_ALGORITHM", "HS256")
 os.environ.setdefault("JWT_EXPIRATION_HOURS", "24")
 os.environ.setdefault("LOG_LEVEL", "CRITICAL")
 
-import pytest
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, event
-from sqlalchemy.orm import Session, sessionmaker
-from sqlalchemy.pool import StaticPool
+import pytest  # noqa: E402
+from fastapi import FastAPI  # noqa: E402
+from fastapi.testclient import TestClient  # noqa: E402
+from sqlalchemy import create_engine, event  # noqa: E402
+from sqlalchemy.orm import Session, sessionmaker  # noqa: E402
+from sqlalchemy.pool import StaticPool  # noqa: E402
 
-from app.core.config import settings
-from app.db.database import get_db
-from app.main import app as _app
-from app.models.base import Base
-from app.models.user import User
-from app.core.security import hash_password, create_access_token
+from app.core.config import settings  # noqa: E402
+from app.db.database import get_db  # noqa: E402
+from app.main import app as _app  # noqa: E402
+from app.models.base import Base  # noqa: E402
+from app.models.user import User  # noqa: E402
+from app.models.project import Project  # noqa: E402
+from app.core.security import hash_password, create_access_token  # noqa: E402
 
 # Use file-based SQLite to avoid in-memory per-connection isolation
 _db_fd, _db_path = tempfile.mkstemp(suffix=".test.db")
@@ -43,9 +55,9 @@ def _set_sqlite_pragma(dbapi_connection, connection_record):
     cursor.close()
 
 
-# Create only the users table at module load time.
-# SQLite doesn't support PostgreSQL-specific types (ARRAY, Vector) used by other models.
+# Create tables that work with SQLite (no PG-specific types like ARRAY, Vector).
 User.__table__.create(bind=engine, checkfirst=True)
+Project.__table__.create(bind=engine, checkfirst=True)
 
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -60,10 +72,14 @@ def override_get_db() -> Generator[Session, None, None]:
 
 @pytest.fixture(autouse=True)
 def cleanup_db():
-    """Delete all data from the users table between tests instead of dropping/recreating."""
+    """Delete all data between tests instead of dropping/recreating."""
     yield
-    TestingSessionLocal().execute(User.__table__.delete())
-    TestingSessionLocal().commit()
+    session = TestingSessionLocal()
+    # Delete in reverse FK order (projects references users)
+    session.execute(Project.__table__.delete())
+    session.execute(User.__table__.delete())
+    session.commit()
+    session.close()
 
 
 @pytest.fixture

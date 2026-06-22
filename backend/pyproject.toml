@@ -1,0 +1,18 @@
+[project]
+name = "publimatch-ai"
+version = "0.1.0"
+description = "PubliMatch AI Backend"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+asyncio_mode = "auto"
+
+[tool.coverage.run]
+source = ["app"]
+omit = ["*/tests/*", "*/venv/*", "*/venv311/*", "*/__pycache__/*"]
+
+[tool.coverage.report]
+fail_under = 70
+show_missing = true
